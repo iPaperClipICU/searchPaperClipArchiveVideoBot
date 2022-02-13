@@ -19,16 +19,16 @@ def checkImageSDK(URL):
     try:
         cred = credential.Credential(SECRETID, SECRETKEY)
         httpProfile = HttpProfile()
-        httpProfile.endpoint = "ims.tencentcloudapi.com"
+        httpProfile.endpoint = 'ims.tencentcloudapi.com'
     
         clientProfile = ClientProfile()
         clientProfile.httpProfile = httpProfile
-        client = ims_client.ImsClient(cred, "ap-singapore", clientProfile)
+        client = ims_client.ImsClient(cred, 'ap-singapore', clientProfile)
     
         req = models.ImageModerationRequest()
         params = {
-            "BizType": "TGroupChat",
-            "FileUrl": URL
+            'BizType': 'TGroupChat',
+            'FileUrl': URL
         }
         req.from_json_string(json.dumps(params))
     
@@ -40,8 +40,6 @@ def checkImageSDK(URL):
 
 def checkImageModule(image, typeName, fromUser, update, context, permissions):
     TOKEN = CONFIG['Token']
-    SECRETID = CONFIG['SecretID']
-    SECRETKEY = CONFIG['SecretKEY']
     CHATGROUP = int(CONFIG['ChatGroup'])
     LOGSGROUP = int(CONFIG['LogsGroup'])
     DATAPATH = CONFIG['DataPath']
@@ -127,9 +125,9 @@ def checkImageModule(image, typeName, fromUser, update, context, permissions):
     else:
         err = data[1]
         errOut = '@qshouzi Error in def:checkImageSDK' +\
-                '\ncode: '+err.code +\
-                '\nmessage: '+err.message +\
-                '\nrequestId: '+err.requestId
+                 '\ncode: '+err.code +\
+                 '\nmessage: '+err.message +\
+                 '\nrequestId: '+err.requestId
         context.bot.send_message(chat_id=LOGSGROUP, text=errOut) #日志群组
 
 # def:checkPhoto #
@@ -137,7 +135,7 @@ def checkPhoto(update: Update, context: CallbackContext, permissions=ChatPermiss
     fromUser = update.message.from_user
     status=context.bot.getChatMember(chat_id=CHATGROUP, user_id=fromUser['id']).status
     if (status not in ['administrator', 'creator']) and (fromUser.is_bot == False):
-        if DEBUG: context.bot.send_message(chat_id=CHATGROUP, text="读取到Photo")
+        if DEBUG: context.bot.send_message(chat_id=CHATGROUP, text='读取到Photo')
         photo = update.message.photo[len(update.message.photo)-1]
         checkImageModule(photo, 'photos', fromUser, update, context, permissions)
 
@@ -146,6 +144,6 @@ def checkImage(update: Update, context: CallbackContext, permissions=ChatPermiss
     fromUser = update.message.from_user
     status=context.bot.getChatMember(chat_id=CHATGROUP, user_id=fromUser['id']).status
     if (status not in ['administrator', 'creator']) and (fromUser.is_bot == False):
-        if DEBUG: context.bot.send_message(chat_id=CHATGROUP, text="读取到Image")
+        if DEBUG: context.bot.send_message(chat_id=CHATGROUP, text='读取到Image')
         image = update.message.document
         checkImageModule(image, 'documents', fromUser, update, context, permissions)
