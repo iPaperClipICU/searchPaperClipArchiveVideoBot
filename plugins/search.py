@@ -12,14 +12,32 @@ def searchModule(keywords):
     r.close()
     keywords = keywords.replace('.', '\\.')
     out = {}
-    for i in data:
-        for ii in data[i]:
-            results = re.match(keywords, ii, re.I|re.X)
-            if (results != None) or (keywords in ii.replace('.', '\\.')):
-                out[ii]={
-                    'tag': i,
-                    'url': data[i][ii]
-                }
+    map = []
+    
+    for i in data['map']:
+        results = re.match(keywords, data['map'][i], re.I|re.X)
+        if (results != None) or (keywords in data['map'][i].replace('.', '\\.')):
+            map.append(i)
+    del data['map']
+    if len(map) != 0:
+        for i in map:
+            for ii in data[i]:
+                results = re.match(keywords, ii, re.I|re.X)
+                if (results != None) or (keywords in ii.replace('.', '\\.')):
+                    out[ii]={
+                        'tag': i,
+                        'url': data[i][ii]
+                    }
+    else:
+        for i in data:
+            for ii in data[i]:
+                results = re.match(keywords, ii, re.I|re.X)
+                if (results != None) or (keywords in ii.replace('.', '\\.')):
+                    out[ii]={
+                        'tag': i,
+                        'url': data[i][ii]
+                    }
+
     if len(out) == 0:
         return None
     else:

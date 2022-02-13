@@ -32,11 +32,10 @@ def ping(update: Update, context: CallbackContext):
 def nsfw(update: Update, context: CallbackContext, permissions=ChatPermissions):
     # /nsfw <userID> <time(s)>
     fromUser = update.message.from_user
-    status=context.bot.getChatMember(chat_id=CHATGROUP, user_id=fromUser['id']).status
+    status = context.bot.getChatMember(chat_id=CHATGROUP, user_id=fromUser['id']).status
     if (status in ['administrator', 'creator']) or (fromUser['id'] == FATHER):
         if len(context.args) == 2:
-            user = context.args[0]
-            time = context.args[1]
+            (user, time) = context.args
             update.message.bot.restrict_chat_member(chat_id=CHATGROUP, user_id=user, until_date=(time.time()+time), permissions=permissions(can_send_messages=False))
         else:
             context.bot.send_message(chat_id=update.effective_chat.id, text='格式: /nsfw <userID> <time(s)>\nuserID 是一串数字\ntime 小于30s永久禁言')

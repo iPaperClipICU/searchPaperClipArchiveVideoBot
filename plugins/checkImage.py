@@ -33,7 +33,6 @@ def checkImageSDK(URL):
         req.from_json_string(json.dumps(params))
     
         resp = client.ImageModeration(req)
-        tmp = resp.to_json_string()
         return [0, resp.to_json_string()]
     except TencentCloudSDKException as err:
         return [1, err]
@@ -65,26 +64,26 @@ def checkImageModule(image, typeName, fromUser, update, context, permissions):
             userName = fromUser['name']
             userID = str(fromUser['id'])
             if data['Suggestion'] == 'Block':
-                update.message.bot.delete_message(chat_id=CHATGROUP, message_id=update.message.message_id) #30*60
+                update.message.bot.delete_message(chat_id=CHATGROUP, message_id=update.message.message_id)
                 update.message.bot.restrict_chat_member(chat_id=CHATGROUP, user_id=fromUser['id'], until_date=(time.time()+(31)), permissions=permissions(can_send_messages=False))
                 chatOut = '检测到色情内容，发送者已被封禁30min' +\
-                        '\n发送者: '+userName+' | '+userID+' | '+userFullName +\
-                        '\n违规类型: image' +\
-                        '\n违规标签: '+label+'-'+subLabel +\
-                        '\n管理员请前往日志群审查内容，如为儿童类违规请手动封禁'
+                          '\n发送者: {userName} | {userID} | {userFullName}' +\
+                          '\n违规类型: image' +\
+                          '\n违规标签: {label}-{subLabel}' +\
+                          '\n管理员请前往日志群审查内容，如为儿童类违规请手动封禁'
                 logOut = '检测到群聊存在色情内容' +\
-                        '\n如存在儿童类违规请第一时间删除文件并封禁发送者'
+                         '\n如存在儿童类违规请第一时间删除文件并封禁发送者'
             else:
                 chatOut = '检测到疑似色情内容，请管理员人工复审'
                 logOut = '检测到疑似色情内容，请管理员人工复审'
             logOut = logOut +\
-                    '\n发送者: '+userName+' | '+userID+' | '+userFullName +\
+                    '\n发送者: {userName} | {userID} | {userFullName}' +\
                     '\n文件类型: image' +\
-                    '\n处理建议: '+suggestion +\
-                    '\n标签: '+label+'-'+subLabel +\
-                    '\n可信度: '+score +\
-                    '\nMD5: '+fileMD5 +\
-                    '\nID: '+requestID
+                    '\n处理建议: {suggestion}' +\
+                    '\n标签: {label}-{subLabel}' +\
+                    '\n可信度: {score}' +\
+                    '\nMD5: {fileMD5}' +\
+                    '\nID: {requestID}'
             context.bot.send_message(chat_id=CHATGROUP, text=chatOut) #聊天群组
             if typeName == 'photos':
                 logsGroupMessageID = context.bot.send_photo(chat_id=LOGSGROUP, photo=photo, filename='违规图片', protect_content=True).message_id #日志群组
@@ -130,19 +129,17 @@ def checkImageModule(image, typeName, fromUser, update, context, permissions):
                  '\nrequestId: '+err.requestId
         context.bot.send_message(chat_id=LOGSGROUP, text=errOut) #日志群组
 
-# def:checkPhoto #
 def checkPhoto(update: Update, context: CallbackContext, permissions=ChatPermissions):
     fromUser = update.message.from_user
-    status=context.bot.getChatMember(chat_id=CHATGROUP, user_id=fromUser['id']).status
+    status = context.bot.getChatMember(chat_id=CHATGROUP, user_id=fromUser['id']).status
     if (status not in ['administrator', 'creator']) and (fromUser.is_bot == False):
         if DEBUG: context.bot.send_message(chat_id=CHATGROUP, text='读取到Photo')
         photo = update.message.photo[len(update.message.photo)-1]
         checkImageModule(photo, 'photos', fromUser, update, context, permissions)
 
-# def:checkImage #
 def checkImage(update: Update, context: CallbackContext, permissions=ChatPermissions):
     fromUser = update.message.from_user
-    status=context.bot.getChatMember(chat_id=CHATGROUP, user_id=fromUser['id']).status
+    status = context.bot.getChatMember(chat_id=CHATGROUP, user_id=fromUser['id']).status
     if (status not in ['administrator', 'creator']) and (fromUser.is_bot == False):
         if DEBUG: context.bot.send_message(chat_id=CHATGROUP, text='读取到Image')
         image = update.message.document
