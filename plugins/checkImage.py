@@ -6,7 +6,7 @@ from tencentcloud.common.profile.client_profile import ClientProfile
 from tencentcloud.common.profile.http_profile import HttpProfile
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.ims.v20201229 import ims_client, models
-from .getConfig import getConfig
+from .tools import getConfig, getJson, writeJson
 
 # Config
 CONFIG = getConfig()
@@ -65,7 +65,7 @@ def checkImageModule(image, typeName, fromUser, update, context, permissions):
             userID = str(fromUser['id'])
             if data['Suggestion'] == 'Block':
                 update.message.bot.delete_message(chat_id=CHATGROUP, message_id=update.message.message_id)
-                update.message.bot.restrict_chat_member(chat_id=CHATGROUP, user_id=fromUser['id'], until_date=(time.time()+(31)), permissions=permissions(can_send_messages=False))
+                update.message.bot.restrict_chat_member(chat_id=CHATGROUP, user_id=fromUser['id'], until_date=(time.time()+(30*60)), permissions=permissions(can_send_messages=False))
                 chatOut = '检测到色情内容，发送者已被封禁30min' +\
                           '\n发送者: {userName} | {userID} | {userFullName}' +\
                           '\n违规类型: image' +\
@@ -108,19 +108,9 @@ def checkImageModule(image, typeName, fromUser, update, context, permissions):
                     data #原始数据
                 ]
             }
-            try:
-                with open(DATAPATH, 'rb') as f:
-                    jsonData = json.load(f)
-                    jsonData[requestID] = outJsonData
-                f.close()
-            except:
-                print('jsonData 读失败')
-            try:
-                with open(DATAPATH, 'w') as r:
-                    json.dump(jsonData, r)
-                r.close()
-            except:
-                print('jsonData 写失败')
+            jsonData = getJson(DATAPATH)
+            jsonData[requestID] = outJsonData
+            writeJson(DATAPATH, jsonData)
     else:
         err = data[1]
         errOut = '@qshouzi Error in def:checkImageSDK' +\

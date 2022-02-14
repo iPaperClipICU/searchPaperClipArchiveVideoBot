@@ -10,7 +10,7 @@ from telegram.ext import (
 )
 from plugins.checkImage import checkPhoto, checkImage
 from plugins.search import search, button
-from plugins.getConfig import getConfig
+from plugins.tools import getConfig
 
 # Config
 CONFIG = getConfig()

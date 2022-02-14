@@ -29,6 +29,7 @@ ChatGroup = <int>
 #日志群组ID
 LogsGroup = <int>
 DataPath = .\data\data.json
+searchDataPath = .\data\searchData.json
 SearchMapPath = .\plugins\searchMap.json
 #BOT创建者ID
 Father = <int>
