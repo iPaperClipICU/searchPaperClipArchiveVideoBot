@@ -75,7 +75,7 @@ def search(update: Update, context: CallbackContext):
     messageID = update.message.message_id
     if len(context.args) != 0:
         keywords = ''
-        for i in context.args: keywords=keywords+i
+        for i in context.args: keywords=keywords+i+' '
         out = searchModule(keywords)
         all = out[1]
         out = out[0]
@@ -90,8 +90,8 @@ def search(update: Update, context: CallbackContext):
                 keyboard.append([InlineKeyboardButton('下一页(2)', callback_data='0_next')])
             reply_markup = InlineKeyboardMarkup(keyboard)
             messageID = update.message.reply_text(text='🔍查询归档站视频\n共 '+all+' 个结果 | 1/'+str(len(out))+' 页\n'+update.message.from_user['name']+' 请点击选择',
-                                      reply_markup=reply_markup, disable_notification=True,
-                                      reply_to_message_id=messageID, allow_sending_without_reply=True)['message_id']
+                                                  reply_markup=reply_markup, disable_notification=True,
+                                                  reply_to_message_id=messageID, allow_sending_without_reply=True)['message_id']
             tmpData[str(chatID)+'_'+str(messageID)] = {
                 'time': time.time(),
                 'all': all,

@@ -1,12 +1,13 @@
-import logging
-from telegram import Update, ChatPermissions
+import logging, time, base64
+from telegram import Update, ChatPermissions, InlineQueryResultArticle, InputTextMessageContent
 from telegram.ext import (
     Updater,
     CallbackContext,
     CommandHandler,
     MessageHandler,
     Filters,
-    CallbackQueryHandler
+    CallbackQueryHandler,
+    InlineQueryHandler
 )
 from plugins.checkImage import checkPhoto, checkImage
 from plugins.search import search, button
@@ -20,17 +21,13 @@ FATHER = CONFIG['Father']
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-# def:Start #
 def start(update: Update, context: CallbackContext):
     context.bot.send_message(chat_id=update.effective_chat.id, text='Github: https://github.com/iPaperClipICU/paperClipReviewBot', disable_web_page_preview=True)
 
-# def:ping #
 def ping(update: Update, context: CallbackContext):
     context.bot.send_message(chat_id=update.effective_chat.id, text='pong')
 
-# def:nsfw #
 def nsfw(update: Update, context: CallbackContext, permissions=ChatPermissions):
-    # /nsfw <userID> <time(s)>
     fromUser = update.message.from_user
     status = context.bot.getChatMember(chat_id=CHATGROUP, user_id=fromUser['id']).status
     if (status in ['administrator', 'creator']) or (fromUser['id'] == FATHER):
@@ -42,6 +39,29 @@ def nsfw(update: Update, context: CallbackContext, permissions=ChatPermissions):
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text='你没有权限使用/nsfw，禁言10s')
         update.message.bot.restrict_chat_member(chat_id=CHATGROUP, user_id=fromUser['id'], until_date=(time.time()+10), permissions=permissions(can_send_messages=False))
+    
+def how(update: Update, context: CallbackContext):
+    query = update.inline_query.query
+    if not query:
+        return
+    results = []
+    results.append(
+        InlineQueryResultArticle(
+            id=str(time.time())+'-Baidu-'+query,
+            title='Baidu',
+            hide_url=True,
+            input_message_content=InputTextMessageContent('https://ipaperclip.icu/baidu/?q='+base64.b64encode(query.encode()).decode())
+        ),
+    )
+    results.append(
+        InlineQueryResultArticle(
+            id=str(time.time())+'-Bing-'+query,
+            title='Bing',
+            hide_url=True,
+            input_message_content=InputTextMessageContent('https://ipaperclip.icu/bing/?q='+base64.b64encode(query.encode()).decode())
+        )
+    )
+    context.bot.answer_inline_query(update.inline_query.id, results)
 
 def main():
     updater = Updater(token=TOKEN, use_context=True)
@@ -49,6 +69,7 @@ def main():
 
     dispatcher.add_handler(CommandHandler('start', start))
     dispatcher.add_handler(CommandHandler('ping', ping))
+    dispatcher.add_handler(InlineQueryHandler(how))
     dispatcher.add_handler(CommandHandler('nsfw', nsfw))
     dispatcher.add_handler(CommandHandler('search', search))
     dispatcher.add_handler(CallbackQueryHandler(button))
