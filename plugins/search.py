@@ -75,14 +75,18 @@ def search(update: Update, context: CallbackContext):
     messageID = update.message.message_id
     if len(context.args) != 0:
         keywords = ''
-        for i in context.args: keywords=keywords+i+' '
+        tmp = 0
+        while tmp < len(context.args):
+            keywords = keywords+context.args[tmp]
+            if tmp+1 != len(context.args): keywords = keywords+' '
+            tmp = tmp+1
         out = searchModule(keywords)
-        all = out[1]
-        out = out[0]
         if out == None:
             context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.from_user['name']+'\n未搜索到相关视频',
                                      disable_notification=True, reply_to_message_id=messageID, allow_sending_without_reply=True)
         else:
+            all = out[1]
+            out = out[0]
             keyboard = []
             for i in out[0]:
                 keyboard.append([InlineKeyboardButton(i['tag']+' '+i['name'], callback_data='0_'+str(out[0].index(i)))])
@@ -100,8 +104,8 @@ def search(update: Update, context: CallbackContext):
             }
             writeJson(SEARCHDATAPATH, tmpData)
     else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text='格式: /search <关键词>', disable_notification=True,
-                                 reply_to_message_id=messageID, allow_sending_without_reply=True)
+        context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.from_user['name']+'\n格式: /search <关键词>',
+                                 disable_notification=True, reply_to_message_id=messageID, allow_sending_without_reply=True)
 
 def button(update: Update, context: CallbackContext):
     query = update.callback_query
