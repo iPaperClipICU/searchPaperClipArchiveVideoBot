@@ -32,7 +32,6 @@ def fuck(update: Update, context: CallbackContext, permissions=ChatPermissions):
     command = update.message.text.split()
     if command[0] == '/fuck':
         command.remove('/fuck')
-        context.bot.send_message(chat_id=update.effective_chat.id, text='读取到fuck')
         fromUser = update.message.from_user
         status = context.bot.getChatMember(chat_id=update.effective_chat.id, user_id=fromUser['id']).status
         if (status in ['administrator', 'creator']) or (fromUser['id'] == FATHER):
@@ -44,7 +43,7 @@ def fuck(update: Update, context: CallbackContext, permissions=ChatPermissions):
                 #发送Log
                 logOut = update.message.from_user.name+' 删除了一条 '+update.message.reply_to_message.from_user.name+' 发送的消息\n原因: '+command[1]
                 context.bot.send_message(chat_id=LOGSGROUP, text=logOut)
-                context.bot.send_message(chat_id=update.effective_chat.id, text=logOut)
+                # context.bot.send_message(chat_id=update.effective_chat.id, text=logOut)
             elif command[0] == 'ban' and len(command) == 3:
                 banTime = int(command[1])
                 if banTime < 30 or banTime > 31622400: banTime = 1
@@ -54,9 +53,8 @@ def fuck(update: Update, context: CallbackContext, permissions=ChatPermissions):
                 else: logOut = '时长: '+str(banTime)+' 秒'
                 logOut = update.message.from_user.name+' 禁言了 '+update.message.reply_to_message.from_user.name+'\n'+logOut+'\n原因: '+command[2]
                 context.bot.send_message(chat_id=LOGSGROUP, text=logOut)
-                context.bot.send_message(chat_id=update.effective_chat.id, text=logOut)
+                # context.bot.send_message(chat_id=update.effective_chat.id, text=logOut)
             elif command[0] == 'fuck' and len(command) == 3:
-                context.bot.send_message(chat_id=update.effective_chat.id, text='读取到fuckfuck')
                 #转发消息到Log
                 context.bot.forward_message(chat_id=LOGSGROUP, from_chat_id=update.effective_chat.id, message_id=update.message.reply_to_message.message_id)
                 #删除消息
@@ -74,7 +72,7 @@ def fuck(update: Update, context: CallbackContext, permissions=ChatPermissions):
                          logOut +\
                          '\n原因: '+command[2]
                 context.bot.send_message(chat_id=LOGSGROUP, text=logOut)
-                context.bot.send_message(chat_id=update.effective_chat.id, text=logOut)
+                # context.bot.send_message(chat_id=update.effective_chat.id, text=logOut)
             else:
                 context.bot.send_message(chat_id=update.effective_chat.id, text='格式错误\n/fuck del <原因>\n/fuck ban <时长> <原因>\n/fuck fuck <原因>', reply_to_message_id=update.message.message_id)
         else:

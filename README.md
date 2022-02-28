@@ -18,20 +18,26 @@
 
 ```ini
 [Config]
-#Telegram Bot Token
-Token = <string>
-#tencentID
-SecretID = <string>
-#tencentKey
-SecretKEY = <string>
-#聊天群组ID
-ChatGroup = <int>
-#日志群组ID
-LogsGroup = <int>
+# Telegram Bot Token
+Token = 000:AAA
+# tencentID
+SecretID = AAA
+# tencentKey
+SecretKEY = AAA
+# 聊天群组ID
+ChatGroup = 000
+# 日志群组ID
+LogsGroup = 000
 DataPath = .\data\data.json
 searchDataPath = .\data\searchData.json
 SearchMapPath = .\plugins\searchMap.json
-#BOT创建者ID
-Father = <int>
+Father = 000
 Debug = False
+
+[uptimeRobotConfig]
+apiKey = AAA
+# monitors ID
+Wandering PaperClip 流浪回形针 = 000
+回形针归档站|paperclip.tk = 000
+回形针重症监护室 = 000
 ```

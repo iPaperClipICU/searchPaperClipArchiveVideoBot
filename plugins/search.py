@@ -1,4 +1,4 @@
-import re, json, time
+import re, json, time, requests
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from urllib.request import quote
@@ -7,6 +7,7 @@ from .tools import getConfig, getJson, writeJson
 CONFIG = getConfig()
 SEARCHDATAPATH = CONFIG['searchDataPath']
 tmpData = getJson(SEARCHDATAPATH)
+uptimeRobot = CONFIG['uptimeRobotConfig']
 
 def searchModule(keywords):
     with open(CONFIG['SearchMapPath'], 'r', encoding='utf-8') as r:
@@ -30,7 +31,23 @@ def searchModule(keywords):
         for i in out:
             outHTML = '<b>['+out[i]['tag']+'] '+i+'</b>\n\n'
             for ii in out[i]['url']:
-                outHTML = outHTML+'<a href="'+quote(out[i]['url'][ii], safe='#;/?:@&=+$,', encoding='utf-8')+'">'+ii+'</a>\n'
+                status = ''
+                if ii in uptimeRobot:
+                    parameter = {
+                        'api_key': uptimeRobot['apiKey'],
+                        'monitors': uptimeRobot[ii]
+                    }
+                    reqData = requests.post('https://api.uptimerobot.com/v2/getMonitors', parameter)
+                    if reqData.status_code == 200:
+                        status = {
+                            '0': '⬜️',
+                            '1': '⬜️',
+                            '2': '🟩',
+                            '8': '🟧',
+                            '9': '🟥'
+                        }
+                        status = status[str(reqData.json()['monitors'][0]['status'])]
+                outHTML = outHTML+'<a href="'+quote(out[i]['url'][ii], safe='#;/?:@&=+$,', encoding='utf-8')+'">'+ii+'</a> '+status+'\n'
             tmp[i] = {
                 'tag': '['+out[i]['tag']+'] ',
                 'html': outHTML
@@ -178,4 +195,5 @@ def button(update: Update, context: CallbackContext):
         tmp = tmpData[str(chatID)+'_'+str(messageID)]['data'][int(data[0])][int(data[1])]
         reply_markup = InlineKeyboardMarkup([[InlineKeyboardButton("返回", callback_data=data[0]+'_back')]])
         query.answer()
-        query.edit_message_text(text=query.from_user['name']+'\n'+tmp['html'], parse_mode='HTML', disable_web_page_preview=True, reply_markup=reply_markup)
+        query.edit_message_text(text=query.from_user['name']+'\n'+tmp['html'], parse_mode='HTML',
+                                disable_web_page_preview=True, reply_markup=reply_markup)
