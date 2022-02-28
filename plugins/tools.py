@@ -11,7 +11,7 @@ def getConfig():
     ttmp = ConfigObj('./config.ini', encoding='UTF-8')['uptimeRobotConfig']
     uptimeRobotConfig = {}
     for i in ttmp:
-        uptimeRobotConfig[i] = str(i)
+        uptimeRobotConfig[i] = str(ttmp[i])
     
     CONFIG = {
         'Token': tmp['Token'],
