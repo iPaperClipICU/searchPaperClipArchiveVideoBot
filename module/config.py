@@ -31,11 +31,3 @@ class getConfig:
             '回形针归档站|paperclip.tk': UptimeRobotConfig['回形针归档站|paperclip.tk'],
             '回形针重症监护室': UptimeRobotConfig['回形针重症监护室']
         }
-        # SQL
-        self.SQL = {
-            'host': data['SQLConfig']['host'],
-            'user': data['SQLConfig']['user'],
-            'password': data['SQLConfig']['password'],
-            'db': data['SQLConfig']['db'],
-            'charset': data['SQLConfig']['charset']
-        }
