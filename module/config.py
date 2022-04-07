@@ -23,6 +23,7 @@ class getConfig:
         self.logsGroup = config['LogsGroup']
         self.father = config['Father']
         self.debug = config['Debug']
+        self.pageMax = config['PageMax']
         # UptimeRobot
         self.UptimeRobotApiKey = UptimeRobotConfig['apiKey']
         self.UptimeRobotID = {

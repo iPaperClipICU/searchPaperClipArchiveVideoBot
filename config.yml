@@ -10,7 +10,8 @@ config:
   # 日志群组ID
   LogsGroup:
   Father:
-  Debug:
+  Debug: False
+  pageMax: 10
 
 uptimeRobotConfig:
   apiKey:
@@ -18,10 +19,3 @@ uptimeRobotConfig:
   Wandering PaperClip 流浪回形针:
   回形针归档站|paperclip.tk:
   回形针重症监护室:
-
-SQLConfig:
-  host: localhost
-  user:
-  password:
-  db:
-  charset: utf8mb4
