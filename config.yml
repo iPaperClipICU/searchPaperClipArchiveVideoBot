@@ -1,0 +1,27 @@
+config:
+  # Telegram Bot Token
+  Token:
+  # tencentID
+  SecretID:
+  # tencentKey
+  SecretKEY:
+  # 聊天群组ID
+  ChatGroup:
+  # 日志群组ID
+  LogsGroup:
+  Father:
+  Debug:
+
+uptimeRobotConfig:
+  apiKey:
+  # monitors ID
+  Wandering PaperClip 流浪回形针:
+  回形针归档站|paperclip.tk:
+  回形针重症监护室:
+
+SQLConfig:
+  host: localhost
+  user:
+  password:
+  db:
+  charset: utf8mb4

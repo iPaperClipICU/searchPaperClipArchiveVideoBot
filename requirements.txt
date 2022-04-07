@@ -1,3 +1,4 @@
-configobj
+pyyaml
 python-telegram-bot
 tencentcloud-sdk-python
+pymysql

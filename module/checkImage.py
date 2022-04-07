@@ -1,4 +1,5 @@
 import json, time
+
 from telegram import Update, ChatPermissions
 from telegram.ext import CallbackContext
 from tencentcloud.common import credential
@@ -6,16 +7,18 @@ from tencentcloud.common.profile.client_profile import ClientProfile
 from tencentcloud.common.profile.http_profile import HttpProfile
 from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
 from tencentcloud.ims.v20201229 import ims_client, models
-from .tools import getConfig, getJson, writeJson
+
+from module.config import getConfig
+from module.tools import getJson, writeJson
 
 # Config
-CONFIG = getConfig()
-CHATGROUP = CONFIG['ChatGroup']
-DEBUG = CONFIG['Debug']
+config = getConfig()
+# CHATGROUP = data.getUptimeRobotConfig()['ChatGroup']
+DEBUG = config.debug
 
 def checkImageSDK(URL):
-    SECRETID = CONFIG['SecretID']
-    SECRETKEY = CONFIG['SecretKEY']
+    SECRETID = config.getUptimeRobotConfig()['SecretID']
+    SECRETKEY = config.getUptimeRobotConfig()['SecretKEY']
     try:
         cred = credential.Credential(SECRETID, SECRETKEY)
         httpProfile = HttpProfile()
@@ -38,10 +41,9 @@ def checkImageSDK(URL):
         return [1, err]
 
 def checkImageModule(image, typeName, fromUser, update, context, permissions):
-    TOKEN = CONFIG['Token']
-    CHATGROUP = int(CONFIG['ChatGroup'])
-    LOGSGROUP = int(CONFIG['LogsGroup'])
-    DATAPATH = CONFIG['DataPath']
+    TOKEN = config.getUptimeRobotConfig()['Token']
+    CHATGROUP = int(config.getUptimeRobotConfig()['ChatGroup'])
+    LOGSGROUP = int(config.getUptimeRobotConfig()['LogsGroup'])
     
     photo = image
     file = image.get_file()
@@ -108,9 +110,9 @@ def checkImageModule(image, typeName, fromUser, update, context, permissions):
                     data #原始数据
                 ]
             }
-            jsonData = getJson(DATAPATH)
+            jsonData = getJson('./data/data.json')
             jsonData[requestID] = outJsonData
-            writeJson(DATAPATH, jsonData)
+            writeJson('./data/data.json', jsonData)
     else:
         err = data[1]
         errOut = '@qshouzi Error in def:checkImageSDK' +\
@@ -121,16 +123,16 @@ def checkImageModule(image, typeName, fromUser, update, context, permissions):
 
 def checkPhoto(update: Update, context: CallbackContext, permissions=ChatPermissions):
     fromUser = update.message.from_user
-    status = context.bot.getChatMember(chat_id=CHATGROUP, user_id=fromUser['id']).status
+    status = context.bot.getChatMember(chat_id=config.chatGroup, user_id=fromUser['id']).status
     if (status not in ['administrator', 'creator']) and (fromUser.is_bot == False):
-        if DEBUG: context.bot.send_message(chat_id=CHATGROUP, text='读取到Photo')
+        if DEBUG: context.bot.send_message(chat_id=config.chatGroup, text='读取到Photo')
         photo = update.message.photo[len(update.message.photo)-1]
         checkImageModule(photo, 'photos', fromUser, update, context, permissions)
 
 def checkImage(update: Update, context: CallbackContext, permissions=ChatPermissions):
     fromUser = update.message.from_user
-    status = context.bot.getChatMember(chat_id=CHATGROUP, user_id=fromUser['id']).status
+    status = context.bot.getChatMember(chat_id=config.chatGroup, user_id=fromUser['id']).status
     if (status not in ['administrator', 'creator']) and (fromUser.is_bot == False):
-        if DEBUG: context.bot.send_message(chat_id=CHATGROUP, text='读取到Image')
+        if DEBUG: context.bot.send_message(chat_id=config.chatGroup, text='读取到Image')
         image = update.message.document
         checkImageModule(image, 'documents', fromUser, update, context, permissions)
