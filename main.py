@@ -12,7 +12,7 @@ from telegram.ext import (
 
 from module.config import getConfig
 from module.search import search, button
-# from module.checkImage import checkPhoto, checkImage
+from module.checkImage import checkPhoto, checkImage
 
 config = getConfig()
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
@@ -92,8 +92,8 @@ def main():
     dispatcher.add_handler(MessageHandler(Filters.reply & Filters.command & Filters.chat(config.chatGroup), fuck)) #禁言
     dispatcher.add_handler(CommandHandler('search', search)) #搜索
     dispatcher.add_handler(CallbackQueryHandler(button)) #按钮
-    # dispatcher.add_handler(MessageHandler((Filters.document.file_extension('png') | Filters.document.file_extension('jpg') | Filters.document.file_extension('jpeg') | Filters.document.file_extension('bmp') | Filters.document.file_extension('gif') | Filters.document.file_extension('webp')) & (~Filters.command) & Filters.chat(config.chatGroup), checkImage))
-    # dispatcher.add_handler(MessageHandler(Filters.photo & (~Filters.command) & Filters.chat(config.chatGroup), checkPhoto))
+    dispatcher.add_handler(MessageHandler((Filters.document.file_extension('png') | Filters.document.file_extension('jpg') | Filters.document.file_extension('jpeg') | Filters.document.file_extension('bmp') | Filters.document.file_extension('gif') | Filters.document.file_extension('webp')) & (~Filters.command) & Filters.chat(config.chatGroup), checkImage))
+    dispatcher.add_handler(MessageHandler(Filters.photo & (~Filters.command) & Filters.chat(config.chatGroup), checkPhoto))
     
     updater.start_polling()
     updater.idle()

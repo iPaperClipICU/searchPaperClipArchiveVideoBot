@@ -17,8 +17,8 @@ config = getConfig()
 DEBUG = config.debug
 
 def checkImageSDK(URL):
-    SECRETID = config.getUptimeRobotConfig()['SecretID']
-    SECRETKEY = config.getUptimeRobotConfig()['SecretKEY']
+    SECRETID = config.TencentKet['SecretID']
+    SECRETKEY = config.TencentKet['SecretKEY']
     try:
         cred = credential.Credential(SECRETID, SECRETKEY)
         httpProfile = HttpProfile()
@@ -41,9 +41,9 @@ def checkImageSDK(URL):
         return [1, err]
 
 def checkImageModule(image, typeName, fromUser, update, context, permissions):
-    TOKEN = config.getUptimeRobotConfig()['Token']
-    CHATGROUP = int(config.getUptimeRobotConfig()['ChatGroup'])
-    LOGSGROUP = int(config.getUptimeRobotConfig()['LogsGroup'])
+    TOKEN = config.token
+    CHATGROUP = int(config.chatGroup)
+    LOGSGROUP = int(config.logsGroup)
     
     photo = image
     file = image.get_file()
@@ -69,23 +69,23 @@ def checkImageModule(image, typeName, fromUser, update, context, permissions):
                 update.message.bot.delete_message(chat_id=CHATGROUP, message_id=update.message.message_id)
                 update.message.bot.restrict_chat_member(chat_id=CHATGROUP, user_id=fromUser['id'], until_date=(time.time()+(30*60)), permissions=permissions(can_send_messages=False))
                 chatOut = '检测到色情内容，发送者已被封禁30min' +\
-                          '\n发送者: {userName} | {userID} | {userFullName}' +\
+                          '\n发送者: '+userName+' | '+userID+' | '+userFullName +\
                           '\n违规类型: image' +\
-                          '\n违规标签: {label}-{subLabel}' +\
-                          '\n管理员请前往日志群审查内容，如为儿童类违规请手动封禁'
+                          '\n违规标签: '+label+'-'+subLabel
+                        #   '\n管理员请前往日志群审查内容，如为儿童类违规请手动封禁'
                 logOut = '检测到群聊存在色情内容' +\
                          '\n如存在儿童类违规请第一时间删除文件并封禁发送者'
             else:
                 chatOut = '检测到疑似色情内容，请管理员人工复审'
                 logOut = '检测到疑似色情内容，请管理员人工复审'
             logOut = logOut +\
-                    '\n发送者: {userName} | {userID} | {userFullName}' +\
+                    '\n发送者: '+userName+' | '+userID+' | '+userFullName +\
                     '\n文件类型: image' +\
-                    '\n处理建议: {suggestion}' +\
-                    '\n标签: {label}-{subLabel}' +\
-                    '\n可信度: {score}' +\
-                    '\nMD5: {fileMD5}' +\
-                    '\nID: {requestID}'
+                    '\n处理建议: '+suggestion +\
+                    '\n标签: '+label+'-'+subLabel +\
+                    '\n可信度: '+score +\
+                    '\nMD5: '+fileMD5 +\
+                    '\nID: '+requestID
             context.bot.send_message(chat_id=CHATGROUP, text=chatOut) #聊天群组
             if typeName == 'photos':
                 logsGroupMessageID = context.bot.send_photo(chat_id=LOGSGROUP, photo=photo, filename='违规图片', protect_content=True).message_id #日志群组
