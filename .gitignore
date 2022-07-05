@@ -1,5 +1,8 @@
-__pycache__/
-.vscode/
-data/image/
-data/logs/
-data/video/
+node_modules
+.DS_Store
+.vscode
+
+config.json
+
+data/image/*.jpg
+data/image/*.png

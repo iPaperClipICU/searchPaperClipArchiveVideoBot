@@ -1,3 +1,0 @@
-pyyaml
-python-telegram-bot
-tencentcloud-sdk-python

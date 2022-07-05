@@ -1,0 +1,15 @@
+{
+    "telegram": {
+        "token": "",
+        "chatGroup": "",
+        "logsGroup": "",
+        "father": ""
+    },
+    "tencent": {
+        "secretID": "",
+        "secretKEY": ""
+    },
+    "search": {
+        "pageMax": 10
+    }
+}
