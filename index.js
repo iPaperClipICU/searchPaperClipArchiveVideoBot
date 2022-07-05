@@ -4,7 +4,7 @@ const TencentCheckImageSDK = require('./module/checkImage');
 const { getLMsg, ECMarkdown, downloadFile } = require('./module/utils');
 const MD5 = require('crypto-js/md5');
 
-const TelegramConfig = require('./config.json');
+const TelegramConfig = require('./config.json').telegram;
 
 const token = TelegramConfig.token;
 const bot = new TelegramBot(token, { polling: true });
