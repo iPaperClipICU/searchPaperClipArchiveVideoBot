@@ -1,8 +1,10 @@
 const TelegramBot = require('node-telegram-bot-api');
-const search = require('./module/search');
-const TencentCheckImageSDK = require('./module/checkImage');
-const { getLMsg, ECMarkdown, downloadFile } = require('./module/utils');
+const fs = require('node:fs');
 const MD5 = require('crypto-js/md5');
+
+const search = require('./module/search');
+const GoogleCheckImageSDK = require('./module/checkImage');
+const { getLMsg, ECMarkdown, downloadFile } = require('./module/utils');
 
 const TelegramConfig = require('./config.json').telegram;
 
@@ -43,17 +45,16 @@ bot.onText(/^\/search$/, (msg, match) => {
 });
 
 const checkImage = async (chatID, messageID, userName, userID, fileID, type) => {
-    let fileLink = await bot.getFileLink(fileID);
+    const fileLink = await bot.getFileLink(fileID);
+    const ImagePath = `./data/image/${messageID}_${userID}_${fileID}.${fileLink.split('.').pop()}`;
 
-    let TencentCheckImageSDK_data;
+    // 下载图片
     try {
-        TencentCheckImageSDK_data = await TencentCheckImageSDK(fileLink);
+        await downloadFile(fileLink, ImagePath);
     } catch (e) {
         bot.sendMessage(TelegramConfig.logsGroup, getLMsg([
-            '@qshouzi Error in def:checkImageSDK',
-            `code: ${ECMarkdown(e.code)}`,
-            `message: ${ECMarkdown(e.message)}`,
-            `requestId: ${ECMarkdown(e.requestId)}`
+            '@qshouzi Error in def:downloadFile',
+            ECMarkdown(String(e))
         ]), {
             parse_mode: "MarkdownV2",
             disable_web_page_preview: true
@@ -61,65 +62,95 @@ const checkImage = async (chatID, messageID, userName, userID, fileID, type) => 
         return;
     };
 
-    // 合法
-    if (TencentCheckImageSDK_data.Suggestion == 'Pass') return;
+    let GoogleCheckImageSDK_data;
+    try {
+        GoogleCheckImageSDK_data = await GoogleCheckImageSDK(ImagePath);
+    } catch (e) {
+        bot.sendMessage(TelegramConfig.logsGroup, getLMsg([
+            '@qshouzi Error in def:checkImageSDK',
+            ECMarkdown(String(e))
+        ]), {
+            parse_mode: "MarkdownV2",
+            disable_web_page_preview: true
+        });
+        return;
+    };
+
+    const {adult, spoof, medical, violence, racy} = GoogleCheckImageSDK_data;
+    if (
+        adult[0] == null ||
+        spoof[0] == null ||
+        medical[0] == null ||
+        violence[0] == null ||
+        racy[0] == null
+    ) {
+        bot.sendMessage(TelegramConfig.logsGroup, getLMsg([
+            '@qshouzi GoogleCheckImageSDK_data value Error',
+            '`'+ECMarkdown(String(GoogleCheckImageSDK_data))+'`'
+        ]), {
+            parse_mode: "MarkdownV2",
+            disable_web_page_preview: true
+        });
+        return;
+    };
+
+    // 疑似
+    if ((adult[0] == 4 || violence[0] >= 4 || racy[0] >= 4) && adult[0] != 5) {
+        bot.sendMessage(TelegramConfig.chatGroup, getLMsg([
+            `\\#${userID}\\_${messageID}A`,
+            '疑似包含违规内容',
+            '',
+            `adult 成人: ${String(adult[0])}/5`,
+            `violence 暴力: ${String(violence[0])}/5`,
+            `racy 色情: ${String(racy[0])}/5`
+        ]), {
+            parse_mode: "MarkdownV2",
+            reply_to_message_id: messageID,
+            allow_sending_without_reply: true,
+            disable_web_page_preview: true,
+        });
+        return;
+    } else if (adult[0] != 5) {
+        // 合法
+        fs.unlink(ImagePath, (err) => {
+            if (err) {
+                bot.sendMessage(TelegramConfig.logsGroup, getLMsg([
+                    '@qshouzi Error in def:fs.unlink',
+                    ECMarkdown(String(err))
+                ]), {
+                    parse_mode: "MarkdownV2",
+                    disable_web_page_preview: true
+                });
+            };
+        });
+        return;
+    };
 
     // 非法
-    const suggestion = TencentCheckImageSDK_data['Suggestion'];
-    const label = TencentCheckImageSDK_data['Label'];
-    const subLabel = TencentCheckImageSDK_data['SubLabel'];
-    const score = String(TencentCheckImageSDK_data['Score']);
-    const fileMD5 = TencentCheckImageSDK_data['FileMD5'];
-    const requestID = TencentCheckImageSDK_data['RequestId'];
-
-    // 下载图片
-    fileLink = await bot.getFileLink(fileID);
-    await downloadFile(fileLink, `./data/image/${messageID}_${userID}_${fileID}.${fileLink.split('.').pop()}`);
-
-    // 发送违规图片
+    // 发送违规图片到LOG
     if (type == 'document') {
         await bot.sendDocument(TelegramConfig.logsGroup, fileID);
     } else if (type == 'photo') {
         await bot.sendPhoto(TelegramConfig.logsGroup, fileID);
     };
 
-    let chatMsg, logMsg;
-    if (suggestion == 'Block') {
-        // 禁言
-        bot.restrictChatMember(chatID, userID, {
-            until_date: Math.floor(Date.now() / 1000) + (30*60), //30分钟
-            permissions: {can_send_messages: false}
-        });
-        // 删除消息
-        bot.deleteMessage(chatID, messageID);
-        chatMsg = getLMsg([
-            '检测到色情内容，发送者已被封禁30min',
-            `发送者: [${userName}](tg://user?id=${String(userID)}) \\| ${String(userID)}`,
-            '违规类型: image',
-            `违规标签: ${ECMarkdown(`${label}-${subLabel}`)}`
-        ]);
-        logMsg = getLMsg([
-            '检测到群聊存在色情内容',
-            '如存在儿童类违规请第一时间删除文件并封禁发送者'
-        ]);
-    } else {
-        chatMsg = '检测到疑似色情内容，请管理员人工复审';
-        logMsg = '检测到疑似色情内容，请管理员人工复审';
-    };
-    logMsg += getLMsg([
+    // 禁言
+    await bot.restrictChatMember(chatID, userID, {
+        until_date: Math.floor(Date.now() / 1000) + (30*60), //30分钟
+        permissions: {can_send_messages: false}
+    });
+    // 删除消息
+    bot.deleteMessage(chatID, messageID);
+    const chatMsg = getLMsg([
+        '检测到色情内容，发送者已被封禁30min',
         `发送者: [${userName}](tg://user?id=${String(userID)}) \\| ${String(userID)}`,
-        '文件类型: image',
-        `处理建议: ${ECMarkdown(suggestion)}`,
-        `标签: ${ECMarkdown(`${label}-${subLabel}`)}`,
-        `可信度: ${ECMarkdown(score)}`,
-        `MD5: ${ECMarkdown(fileMD5)}`,
-        `ID: ${ECMarkdown(requestID)}`
+        '违规类型: image'
     ]);
     bot.sendMessage(TelegramConfig.chatGroup, chatMsg, {
         parse_mode: "MarkdownV2",
         disable_web_page_preview: true
     });
-    bot.sendMessage(TelegramConfig.logsGroup, logMsg, {
+    bot.sendMessage(TelegramConfig.logsGroup, chatMsg, {
         parse_mode: "MarkdownV2",
         disable_web_page_preview: true
     });
