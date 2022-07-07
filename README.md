@@ -11,3 +11,16 @@
 <!-- `禁言 /fuck <userID> <time(s)>`: 通过指令对指定用户禁言禁言时长小于30s是永久禁言 -->
 
 `搜索归档视频 /search <keywords>`: 通过指令搜索归档站视频
+
+## Note
+
+```
+Linux
+export GOOGLE_APPLICATION_CREDENTIALS="KEY_PATH"
+
+Window
+PowerShell
+$env:GOOGLE_APPLICATION_CREDENTIALS="KEY_PATH"
+CMD
+set GOOGLE_APPLICATION_CREDENTIALS=KEY_PATH
+```
