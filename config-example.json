@@ -5,10 +5,6 @@
         "logsGroup": "",
         "father": ""
     },
-    "tencent": {
-        "secretID": "",
-        "secretKEY": ""
-    },
     "search": {
         "pageMax": 10
     }
