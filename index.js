@@ -27,10 +27,23 @@ bot.onText(/\/ping/, (msg, match) => {
     bot.sendMessage(msg.chat.id, 'pong');
 });
 
+/**
+ * 获取用户名
+ * @param {TelegramBot.Message} msg TelegramBot.Message
+ * @returns {String} 用户名
+ */
+const getUserName = (msg) => {
+    if (msg.from.username == void 0) {
+        return `${msg.from.first_name} ${msg.from.last_name}`;
+    } else {
+        return `@${msg.from.username}`;
+    };
+};
+
 bot.onText(/^\/search$/, (msg, match) => {
     const chatID = msg.chat.id;
     const messageID = msg.message_id;
-    const userName = ECMarkdown('@' + msg.from.username || `${msg.from.first_name} ${msg.from.last_name}`);
+    const userName = ECMarkdown(getUserName(msg));
     const userID = msg.from.id;
 
     bot.sendMessage(chatID, getLMsg([
@@ -76,7 +89,7 @@ const checkImage = async (chatID, messageID, userName, userID, fileID, type) => 
         return;
     };
 
-    const {adult, spoof, medical, violence, racy} = GoogleCheckImageSDK_data;
+    const { adult, spoof, medical, violence, racy } = GoogleCheckImageSDK_data;
     if (
         adult[0] == null ||
         spoof[0] == null ||
@@ -86,7 +99,7 @@ const checkImage = async (chatID, messageID, userName, userID, fileID, type) => 
     ) {
         bot.sendMessage(TelegramConfig.logsGroup, getLMsg([
             '@qshouzi GoogleCheckImageSDK_data value Error',
-            '`'+ECMarkdown(String(GoogleCheckImageSDK_data))+'`'
+            '`' + ECMarkdown(String(GoogleCheckImageSDK_data)) + '`'
         ]), {
             parse_mode: "MarkdownV2",
             disable_web_page_preview: true
@@ -136,8 +149,8 @@ const checkImage = async (chatID, messageID, userName, userID, fileID, type) => 
 
     // 禁言
     await bot.restrictChatMember(chatID, userID, {
-        until_date: Math.floor(Date.now() / 1000) + (30*60), //30分钟
-        permissions: {can_send_messages: false}
+        until_date: Math.floor(Date.now() / 1000) + (30 * 60), //30分钟
+        permissions: { can_send_messages: false }
     });
     // 删除消息
     bot.deleteMessage(chatID, messageID);
@@ -158,7 +171,7 @@ const checkImage = async (chatID, messageID, userName, userID, fileID, type) => 
 bot.on('document', async (msg, match) => {
     const chatID = msg.chat.id;
     const messageID = msg.message_id;
-    const userName = ECMarkdown('@' + msg.from.username || `${msg.from.first_name} ${msg.from.last_name}`);
+    const userName = ECMarkdown(getUserName(msg));
     const userID = msg.from.id;
 
     if (chatID != TelegramConfig.chatGroup) return;
@@ -174,7 +187,7 @@ bot.on('document', async (msg, match) => {
 bot.on('photo', async (msg, match) => {
     const chatID = msg.chat.id;
     const messageID = msg.message_id;
-    const userName = ECMarkdown('@' + msg.from.username || `${msg.from.first_name} ${msg.from.last_name}`);
+    const userName = ECMarkdown(getUserName(msg));
     const userID = msg.from.id;
 
     if (chatID != TelegramConfig.chatGroup) return;
@@ -189,7 +202,7 @@ bot.on('photo', async (msg, match) => {
 bot.onText(/\/search (.+)/, (msg, match) => {
     const chatID = msg.chat.id;
     const messageID = msg.message_id;
-    const userName = ECMarkdown('@' + msg.from.username || `${msg.from.first_name} ${msg.from.last_name}`);
+    const userName = ECMarkdown(getUserName(msg));
     const userID = msg.from.id;
 
     const keyword = String(match[1]).toLocaleLowerCase();
@@ -253,7 +266,7 @@ bot.on('callback_query', (msg) => {
     const chatID = msg.message.chat.id;
     const messageID = msg.message.message_id;
     const callbackData = msg.data;
-    const userName = ECMarkdown('@' + msg.from.username || `${msg.from.first_name} ${msg.from.last_name}`);
+    const userName = ECMarkdown(getUserName(msg));
     const userID = msg.from.id;
 
     if (callbackData.substring(0, 2) == 'F_') {
