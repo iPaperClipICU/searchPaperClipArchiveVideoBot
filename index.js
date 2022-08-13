@@ -121,6 +121,12 @@ const checkImage = async (chatID, messageID, userName, userID, fileID, type) => 
             reply_to_message_id: messageID,
             allow_sending_without_reply: true,
             disable_web_page_preview: true,
+            reply_markup: {
+                inline_keyboard: [[{
+                    text: '永久禁言(管理员)',
+                    callback_data: `B_${String(userID)}`
+                }]]
+            }
         });
         return;
     } else if (adult[0] != 5) {
@@ -161,7 +167,13 @@ const checkImage = async (chatID, messageID, userName, userID, fileID, type) => 
     ]);
     bot.sendMessage(TelegramConfig.chatGroup, chatMsg, {
         parse_mode: "MarkdownV2",
-        disable_web_page_preview: true
+        disable_web_page_preview: true,
+        reply_markup: {
+            inline_keyboard: [[{
+                text: '永久禁言(管理员)',
+                callback_data: `B_${String(userID)}`
+            }]]
+        }
     });
     bot.sendMessage(TelegramConfig.logsGroup, chatMsg, {
         parse_mode: "MarkdownV2",
@@ -261,8 +273,10 @@ bot.onText(/\/search (.+)/, (msg, match) => {
  * F_xxx_0_1: 文件页 F_MD5(keyword)_PageNum_File
  * P_xxx_0: 搜索页 P_MD5(keyword)_PageNum
  * PageNum 为在 searchData_tmp 中的下标
+ * 
+ * B_xxx: 封禁 B_userid
  */
-bot.on('callback_query', (msg) => {
+bot.on('callback_query', async (msg) => {
     const chatID = msg.message.chat.id;
     const messageID = msg.message.message_id;
     const callbackData = msg.data;
@@ -386,6 +400,28 @@ bot.on('callback_query', (msg) => {
                 inline_keyboard: inlineKeyboard
             }
         });
+    } else if (callbackData.substring(0, 2) == 'B_') {
+        const banUserID = Number(callbackData.split('_')[1]);
+
+        const status = (await bot.getChatMember(chatID, userID)).status;
+        if (status == 'administrator' || status == 'creator') {
+            await bot.restrictChatMember(chatID, String(banUserID), {
+                until_date: Math.floor(Date.now() / 1000) + 1, //永久封禁
+                permissions: { can_send_messages: false }
+            });
+            bot.sendMessage(chatID, getLMsg([
+                `管理员 [${userName}](tg://user?id=${String(userID)}) 封禁了 [${String(banUserID)}](tg://user?id=${String(banUserID)})`,
+            ]), {
+                parse_mode: 'MarkdownV2',
+                disable_web_page_preview: true,
+                disable_notification: true,
+                reply_to_message_id: messageID,
+                allow_sending_without_reply: true
+            });
+        } else {
+            bot.answerCallbackQuery(msg.id, '您没有权限点击此按钮', true);
+            return;
+        };
     };
 
     bot.answerCallbackQuery(msg.id);
