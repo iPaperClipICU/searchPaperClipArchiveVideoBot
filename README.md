@@ -6,13 +6,13 @@
 
 ## 功能
 
-`识别色情图片`: 使用 Google Vision API 识别群组中发出的成人图片
+<!-- `识别色情图片`: 使用 Google Vision API 识别群组中发出的成人图片 -->
 
 <!-- `禁言 /fuck <userID> <time(s)>`: 通过指令对指定用户禁言禁言时长小于30s是永久禁言 -->
 
 `搜索归档视频 /search <keywords>`: 通过指令搜索归档站视频
 
-## Note
+<!-- ## Note
 
 ```
 Linux
@@ -23,4 +23,4 @@ PowerShell
 $env:GOOGLE_APPLICATION_CREDENTIALS="KEY_PATH"
 CMD
 set GOOGLE_APPLICATION_CREDENTIALS=KEY_PATH
-```
+``` -->

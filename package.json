@@ -8,7 +8,6 @@
   },
   "dependencies": {
     "crypto-js": "^4.1.1",
-    "node-telegram-bot-api": "^0.58.0",
-    "@google-cloud/vision": "^2.4.2"
+    "node-telegram-bot-api": "^0.58.0"
   }
 }

@@ -1,10 +1,8 @@
 const TelegramBot = require('node-telegram-bot-api');
-const fs = require('node:fs');
 const MD5 = require('crypto-js/md5');
 
 const search = require('./module/search');
-const GoogleCheckImageSDK = require('./module/checkImage');
-const { getLMsg, ECMarkdown, downloadFile } = require('./module/utils');
+const { getLMsg, ECMarkdown } = require('./module/utils');
 
 const TelegramConfig = require('./config.json').telegram;
 
@@ -12,6 +10,19 @@ const token = TelegramConfig.token;
 const bot = new TelegramBot(token, { polling: true });
 
 let searchData_tmp = {};
+
+/**
+ * 获取用户名
+ * @param {TelegramBot.Message} msg TelegramBot.Message
+ * @returns {String} 用户名
+ */
+const getUserName = (msg) => {
+    if (msg.from.username == void 0) {
+        return `${msg.from.first_name} ${msg.from.last_name}`;
+    } else {
+        return `@${msg.from.username}`;
+    };
+};
 
 bot.onText(/\/start/, (msg, match) => {
     bot.sendMessage(msg.chat.id, getLMsg([
@@ -26,19 +37,6 @@ bot.onText(/\/start/, (msg, match) => {
 bot.onText(/\/ping/, (msg, match) => {
     bot.sendMessage(msg.chat.id, 'pong');
 });
-
-/**
- * 获取用户名
- * @param {TelegramBot.Message} msg TelegramBot.Message
- * @returns {String} 用户名
- */
-const getUserName = (msg) => {
-    if (msg.from.username == void 0) {
-        return `${msg.from.first_name} ${msg.from.last_name}`;
-    } else {
-        return `@${msg.from.username}`;
-    };
-};
 
 bot.onText(/^\/search$/, (msg, match) => {
     const chatID = msg.chat.id;
@@ -55,160 +53,6 @@ bot.onText(/^\/search$/, (msg, match) => {
         allow_sending_without_reply: true,
         disable_web_page_preview: true,
     });
-});
-
-const checkImage = async (chatID, messageID, userName, userID, fileID, type) => {
-    const fileLink = await bot.getFileLink(fileID);
-    const ImagePath = `./data/image/${messageID}_${userID}_${fileID}.${fileLink.split('.').pop()}`;
-
-    // 下载图片
-    try {
-        await downloadFile(fileLink, ImagePath);
-    } catch (e) {
-        bot.sendMessage(TelegramConfig.logsGroup, getLMsg([
-            '@qshouzi Error in def:downloadFile',
-            ECMarkdown(String(e))
-        ]), {
-            parse_mode: "MarkdownV2",
-            disable_web_page_preview: true
-        });
-        return;
-    };
-
-    let GoogleCheckImageSDK_data;
-    try {
-        GoogleCheckImageSDK_data = await GoogleCheckImageSDK(ImagePath);
-    } catch (e) {
-        bot.sendMessage(TelegramConfig.logsGroup, getLMsg([
-            '@qshouzi Error in def:checkImageSDK',
-            ECMarkdown(String(e))
-        ]), {
-            parse_mode: "MarkdownV2",
-            disable_web_page_preview: true
-        });
-        return;
-    };
-
-    const { adult, spoof, medical, violence, racy } = GoogleCheckImageSDK_data;
-    if (
-        adult[0] == null ||
-        spoof[0] == null ||
-        medical[0] == null ||
-        violence[0] == null ||
-        racy[0] == null
-    ) {
-        bot.sendMessage(TelegramConfig.logsGroup, getLMsg([
-            '@qshouzi GoogleCheckImageSDK_data value Error',
-            '`' + ECMarkdown(String(GoogleCheckImageSDK_data)) + '`'
-        ]), {
-            parse_mode: "MarkdownV2",
-            disable_web_page_preview: true
-        });
-        return;
-    };
-
-    // 疑似
-    if ((adult[0] == 4 || violence[0] >= 4 || racy[0] >= 4) && adult[0] != 5) {
-        bot.sendMessage(TelegramConfig.chatGroup, getLMsg([
-            `\\#${userID}\\_${messageID}A`,
-            '疑似包含违规内容',
-            '',
-            `adult 成人: ${String(adult[0])}/5`,
-            `violence 暴力: ${String(violence[0])}/5`,
-            `racy 色情: ${String(racy[0])}/5`
-        ]), {
-            parse_mode: "MarkdownV2",
-            reply_to_message_id: messageID,
-            allow_sending_without_reply: true,
-            disable_web_page_preview: true,
-            reply_markup: {
-                inline_keyboard: [[{
-                    text: '永久禁言(管理员)',
-                    callback_data: `B_${String(userID)}`
-                }]]
-            }
-        });
-        return;
-    } else if (adult[0] != 5) {
-        // 合法
-        fs.unlink(ImagePath, (err) => {
-            if (err) {
-                bot.sendMessage(TelegramConfig.logsGroup, getLMsg([
-                    '@qshouzi Error in def:fs.unlink',
-                    ECMarkdown(String(err))
-                ]), {
-                    parse_mode: "MarkdownV2",
-                    disable_web_page_preview: true
-                });
-            };
-        });
-        return;
-    };
-
-    // 非法
-    // 发送违规图片到LOG
-    if (type == 'document') {
-        await bot.sendDocument(TelegramConfig.logsGroup, fileID);
-    } else if (type == 'photo') {
-        await bot.sendPhoto(TelegramConfig.logsGroup, fileID);
-    };
-
-    // 禁言
-    await bot.restrictChatMember(chatID, userID, {
-        until_date: Math.floor(Date.now() / 1000) + (30 * 60), //30分钟
-        permissions: { can_send_messages: false }
-    });
-    // 删除消息
-    bot.deleteMessage(chatID, messageID);
-    const chatMsg = getLMsg([
-        '检测到色情内容，发送者已被封禁30min',
-        `发送者: [${userName}](tg://user?id=${String(userID)}) \\| ${String(userID)}`,
-        '违规类型: image'
-    ]);
-    bot.sendMessage(TelegramConfig.chatGroup, chatMsg, {
-        parse_mode: "MarkdownV2",
-        disable_web_page_preview: true,
-        reply_markup: {
-            inline_keyboard: [[{
-                text: '永久禁言(管理员)',
-                callback_data: `B_${String(userID)}`
-            }]]
-        }
-    });
-    bot.sendMessage(TelegramConfig.logsGroup, chatMsg, {
-        parse_mode: "MarkdownV2",
-        disable_web_page_preview: true
-    });
-};
-bot.on('document', async (msg, match) => {
-    const chatID = msg.chat.id;
-    const messageID = msg.message_id;
-    const userName = ECMarkdown(getUserName(msg));
-    const userID = msg.from.id;
-
-    if (chatID != TelegramConfig.chatGroup) return;
-    const status = (await bot.getChatMember(chatID, userID)).status;
-    if (status == 'administrator' || status == 'creator' || msg.from.is_bot) return;
-
-    const fileMimeType = msg.document.mime_type;
-    const fileID = msg.document.file_id;
-    if (fileMimeType.substring(0, 5) != 'image') return;
-
-    checkImage(chatID, messageID, userName, userID, fileID, 'document');
-});
-bot.on('photo', async (msg, match) => {
-    const chatID = msg.chat.id;
-    const messageID = msg.message_id;
-    const userName = ECMarkdown(getUserName(msg));
-    const userID = msg.from.id;
-
-    if (chatID != TelegramConfig.chatGroup) return;
-    const status = (await bot.getChatMember(chatID, userID)).status;
-    if (status == 'administrator' || status == 'creator' || msg.from.is_bot) return;
-
-    const fileID = msg.photo[msg.photo.length - 1].file_id;
-
-    checkImage(chatID, messageID, userName, userID, fileID, 'photo');
 });
 
 bot.onText(/\/search (.+)/, (msg, match) => {
@@ -273,8 +117,6 @@ bot.onText(/\/search (.+)/, (msg, match) => {
  * F_xxx_0_1: 文件页 F_MD5(keyword)_PageNum_File
  * P_xxx_0: 搜索页 P_MD5(keyword)_PageNum
  * PageNum 为在 searchData_tmp 中的下标
- * 
- * B_xxx: 封禁 B_userid
  */
 bot.on('callback_query', async (msg) => {
     const chatID = msg.message.chat.id;
@@ -400,28 +242,6 @@ bot.on('callback_query', async (msg) => {
                 inline_keyboard: inlineKeyboard
             }
         });
-    } else if (callbackData.substring(0, 2) == 'B_') {
-        const banUserID = Number(callbackData.split('_')[1]);
-
-        const status = (await bot.getChatMember(chatID, userID)).status;
-        if (status == 'administrator' || status == 'creator') {
-            await bot.restrictChatMember(chatID, String(banUserID), {
-                until_date: Math.floor(Date.now() / 1000) + 1, //永久封禁
-                permissions: { can_send_messages: false }
-            });
-            bot.sendMessage(chatID, getLMsg([
-                `管理员 [${userName}](tg://user?id=${String(userID)}) 封禁了 [${String(banUserID)}](tg://user?id=${String(banUserID)})`,
-            ]), {
-                parse_mode: 'MarkdownV2',
-                disable_web_page_preview: true,
-                disable_notification: true,
-                reply_to_message_id: messageID,
-                allow_sending_without_reply: true
-            });
-        } else {
-            bot.answerCallbackQuery(msg.id, '您没有权限点击此按钮', true);
-            return;
-        };
     };
 
     bot.answerCallbackQuery(msg.id);

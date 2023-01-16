@@ -3,6 +3,3 @@ node_modules
 .vscode
 
 config.json
-
-data/image/*.jpg
-data/image/*.png

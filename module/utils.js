@@ -45,40 +45,7 @@ const ECMarkdown = (text, type = '') => {
     };
 };
 
-/**
- * 下载文件
- * @param {String} uri URI
- * @param {String} dest 本地保存路径
- */
-const downloadFile = (uri, dest) => {
-    return new Promise((resolve, reject) => {
-        const file = fs.createWriteStream(dest);
-
-        https.get(uri, (res) => {
-            if (res.statusCode !== 200) {
-                reject(res.statusCode);
-                return;
-            };
-
-            // res.on('end', () => {
-            //     // console.log('download end');
-            // });
-
-            file.on('finish', () => {
-                // console.log('finish write file')
-                file.close(resolve);
-            }).on('error', (err) => {
-                fs.unlink(dest);
-                reject(err.message);
-            });
-
-            res.pipe(file);
-        });
-    });
-};
-
 module.exports = {
     getLMsg,
-    ECMarkdown,
-    downloadFile
+    ECMarkdown
 };
